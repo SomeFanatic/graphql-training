@@ -1,54 +1,28 @@
 import { GraphQLServer } from 'graphql-yoga'
+// data import
+import { users } from './users'
+import { posts } from './posts'
+import { comments } from './comments'
 
-const users = [{
-  id: "User2588754",
-  name: "Igor Šátek",
-  email: "igorsatek@gmail.com",
-  age: 27
-},{
-  id: "User2288759",
-  name: "Martin Kuchto",
-  email: "kuchto@gmail.com",
-},{
-  id: "User2386754",
-  name: "Roman Pinček",
-  email: "romanpincek@gmail.com",
-  age: 27
-}]
 
-const posts = [{
-  id: "Post655897",
-  title: "Najkrajší deň",
-  body: "Včera som zažila tie najkrajši narodeniny môj syn mi...",
-  published: true,
-  author: "User2588754"
-},{
-  id: "Post653897",
-  title: "Najhorší deň",
-  body: "Včera som zažila ten najhorší deň môj muž mi...",
-  published: true,
-  author: "User2588754"
-},{
-  id: "Post654897",
-  title: "Deň za dňom mi",
-  body: "Každý deň je rovnaký neviem ako dlho to ešte zvládnem...",
-  published: false,
-  author: "User2288759"
-}]
 // Type definition => Schema
 // Scaler Types: String, Boolean, Int, Float, ID
 const typeDefs = `
 type Query {
   users(query: String): [User!]!
   posts(query: String): [Post!]!
+  comments: [Comment!]
   me: User!
   post: Post!
+
 }
 type User {
   id: ID!
   name: String!
   email: String!
   age: Int
+  posts: [Post!]!
+  comments: [Comment!]
 }
 type Post {
   id: ID!
@@ -56,6 +30,11 @@ type Post {
   body: String!
   published: Boolean!
   author: User!
+}
+type Comment {
+  id: ID!
+  author: User!
+  text: String!
 }
 `
 //Resolvers
@@ -78,6 +57,9 @@ const resolvers = {
       })
 
     },
+    comments(parent, args, ctx, info){
+      return comments
+    },
    me() {
      return {
       id: '123',
@@ -95,13 +77,31 @@ const resolvers = {
      }
    }
   },
+  Comment: {
+    author(parent, args, ctx, info) {
+      return users.find((user) => {
+        return user.id === parent.author
+      })
+    }
+  },
   Post: {
     author(parent, args, ctx, info) {
       return users.find((user) => {
         return user.id === parent.author
       })
     }
-
+  }, 
+  User: {
+    posts(parent, args, ctx, info) {
+      return posts.filter((post) => {
+        return post.author === parent.id
+      })
+    },
+    comments(parent, args, ctx, info) {
+      return comments.filter((comment) => {
+        return comment.author === parent.id
+      })
+    }
   }
 
 }
