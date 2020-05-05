@@ -30,11 +30,13 @@ type Post {
   body: String!
   published: Boolean!
   author: User!
+  comments: [Comment!]
 }
 type Comment {
   id: ID!
   author: User!
   text: String!
+  post: Post!
 }
 `
 //Resolvers
@@ -82,12 +84,23 @@ const resolvers = {
       return users.find((user) => {
         return user.id === parent.author
       })
+    },
+    post(parent, args, ctx, info) {
+      return posts.find((post) => {
+        return post.id === parent.post
+      })
     }
+    
   },
   Post: {
     author(parent, args, ctx, info) {
       return users.find((user) => {
         return user.id === parent.author
+      })
+    },
+    comments(parent, args, ctx, info) {
+      return comments.filter((comment) => {
+        return comment.post === parent.id
       })
     }
   }, 
